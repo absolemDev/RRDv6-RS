@@ -3,8 +3,8 @@ import {
   BrowserRouter,
   Link,
   Route,
-  Switch,
-  Redirect,
+  Routes,
+  Navigate,
   useParams,
 } from "react-router-dom";
 
@@ -13,22 +13,17 @@ function MainLayout() {
 }
 
 function UsersLayout() {
-  const { userId, page } = useParams();
   return (
     <>
       <h2>Users layout</h2>
       <Link to="/">Main page</Link>
-      {userId ? (
-        page === "edit" ? (
-          <UserEditPage id={userId} />
-        ) : page === "profile" ? (
-          <UserPage id={userId} />
-        ) : (
-          <Redirect to={`/users/${userId}/profile`} />
-        )
-      ) : (
-        <UsersListPage />
-      )}
+      <Routes>
+        <Route path="" element={<UsersListPage />} />
+        <Route path=":userId" element={<Navigate to="profile" />} />
+        <Route path=":userId/profile" element={<UserPage />} />
+        <Route path=":userId/edit" element={<UserEditPage />} />
+        <Route path=":userId/*" element={<Navigate to="profile" />} />
+      </Routes>
     </>
   );
 }
@@ -47,7 +42,7 @@ function UsersListPage() {
       <ul>
         {users.map((u) => (
           <li key={u.id}>
-            <Link to={`/users/${u.id}`}>{u.name}</Link>
+            <Link to={`${u.id}`}>{u.name}</Link>
           </li>
         ))}
       </ul>
@@ -55,7 +50,8 @@ function UsersListPage() {
   );
 }
 
-function UserPage({ id }) {
+function UserPage() {
+  const { userId } = useParams();
   return (
     <>
       <h4>User page</h4>
@@ -64,24 +60,25 @@ function UserPage({ id }) {
           <Link to="/users">Users list page</Link>
         </li>
         <li>
-          <Link to={`/users/${id}/edit`}>Edit this user</Link>
+          <Link to={`/users/${userId}/edit`}>Edit this user</Link>
         </li>
       </ul>
-      <p>User ID: {id}</p>
+      <p>User ID: {userId}</p>
     </>
   );
 }
 
-function UserEditPage({ id }) {
+function UserEditPage() {
+  const { userId } = useParams();
   return (
     <>
       <h4>Edit user page</h4>
       <ul>
         <li>
-          <Link to={`/users/${id}/profile`}>User profile page</Link>
+          <Link to={`/users/${userId}/profile`}>User profile page</Link>
         </li>
         <li>
-          <Link to={`/users/${Number(id) + 1}/profile`}>Another User</Link>
+          <Link to={`/users/${Number(userId) + 1}/profile`}>Another User</Link>
         </li>
         <li>
           <Link to="/users">Users list page</Link>
@@ -96,14 +93,11 @@ function App() {
     <BrowserRouter>
       <h1>App layout</h1>
       <Link to="/users">Users list page</Link>
-      <Switch>
-        <Route path="/" exact component={MainLayout} />
-        <Route
-          path="/users/:userId?/:page(profile|edit)?"
-          component={UsersLayout}
-        />
-        <Redirect to="/" />
-      </Switch>
+      <Routes>
+        <Route path="" element={<MainLayout />} />
+        <Route path="users/*" element={<UsersLayout />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
     </BrowserRouter>
   );
 }
